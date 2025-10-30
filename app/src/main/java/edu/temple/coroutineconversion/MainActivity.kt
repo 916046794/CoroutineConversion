@@ -2,12 +2,18 @@ package edu.temple.coroutineconversion
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
+import kotlin.coroutines.CoroutineContext
+import kotlin.div
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,24 +27,25 @@ class MainActivity : AppCompatActivity() {
         findViewById(R.id.currentTextView)
     }
 
-    val handler = Handler(Looper.getMainLooper(), Handler.Callback {
-
-        currentTextView.text = String.format(Locale.getDefault(), "Current opacity: %d", it.what)
-        cakeImageView.alpha = it.what / 100f
-        true
-    })
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         findViewById<Button>(R.id.revealButton).setOnClickListener{
-            Thread{
+            CoroutineScope(Dispatchers.Default).launch{
+                //where to run the couroutine is in the Default Dispatcher,
+                //launch the following code
                 repeat(100) {
-                    handler.sendEmptyMessage(it)
-                    Thread.sleep(40)
+                    //loop for 100 times
+                    withContext(Dispatchers.Main){
+                        //swap the Dispatcher to the UI
+                        currentTextView.text = String.format(Locale.getDefault(), "Current opacity: %d", it)
+                        cakeImageView.alpha = it / 100f
+                    }
+                    //swap back to delay
+                    delay(40)
                 }
-            }.start()
+            }
         }
     }
 }
